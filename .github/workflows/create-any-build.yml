@@ -84,13 +84,14 @@ jobs:
       #     }
 
 
-      # # ********** Find and store the full RELEASE & DEBUG build paths **********
+      # ********** Find and store the full RELEASE & DEBUG build paths **********
       # - name: Find and store the full RELEASE build path
       #   run: |
       #     $rel_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\release\\.*\.exe$"
       #     $rel_build_path = Split-Path $rel_build_path -Parent
       #     echo "RELEASE_BUILD_PATH=$rel_build_path" >> $env:GITHUB_ENV
       #     echo $rel_build_path
+
       - name: Find and store the full RELEASE build path
         run: |
           $rel_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\\(x64\\\)?release\\.*\.exe$"
@@ -98,16 +99,16 @@ jobs:
           echo "RELEASE_BUILD_PATH=$rel_build_path" >> $env:GITHUB_ENV
           echo $rel_build_path
 
-      - name: Find and store the full DEBUG build path
-        run: |
-          $dbg_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\\(x64\\\)?debug\\.*\.exe$"
-          $dbg_build_path = Split-Path $dbg_build_path -Parent
-          echo "DEBUG_BUILD_PATH=$dbg_build_path" >> $env:GITHUB_ENV
-          echo $dbg_build_path
+        # - name: Find and store the full DEBUG build path
+        #   run: |
+        #     $dbg_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\debug\\.*\.exe$"
+        #     $dbg_build_path = Split-Path $dbg_build_path -Parent
+        #     echo "DEBUG_BUILD_PATH=$dbg_build_path" >> $env:GITHUB_ENV
+        #     echo $dbg_build_path
 
       - name: Find and store the full DEBUG build path
         run: |
-          $dbg_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\debug\\.*\.exe$"
+          $dbg_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\\(x64\\\)?debug\\.*\.exe$"
           $dbg_build_path = Split-Path $dbg_build_path -Parent
           echo "DEBUG_BUILD_PATH=$dbg_build_path" >> $env:GITHUB_ENV
           echo $dbg_build_path
