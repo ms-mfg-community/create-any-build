@@ -21,7 +21,7 @@ on:
 
 
 env:
-  REPOSITORY_NAMESPACE: ra-standard  # This should never change
+  REPOSITORY_NAMESPACE: ms-mfg-community  # This should never change
 
 
 jobs:
