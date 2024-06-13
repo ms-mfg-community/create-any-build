@@ -71,7 +71,7 @@ jobs:
       # ********** Create the RELEASE and DEBUG Builds **********
       - name: Create RELEASE Build        
         run: |
-          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Release /p:OutPutPath=./bin/Release
+          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Release /p:Platform=x64 /p:OutPutPath=./bin/Release
           $exitCode = $LASTEXITCODE
           echo "ErrorCode == $exitCode End of line"
           if ( $exitCode -ne 0 )
@@ -82,7 +82,7 @@ jobs:
           
       - name: Create DEBUG Build        
         run: |
-          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Debug /p:OutPutPath=./bin/Debug
+          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Debug /p:Platform=x64 /p:OutPutPath=./bin/Debug
           $exitCode = $LASTEXITCODE
           if ( $exitCode -ne 0 )
           {
