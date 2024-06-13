@@ -15,6 +15,11 @@ on:
         description: "Name of the SOLUTION FILE to build"
         required: true
         type: string
+      msbuild_architecture:
+        description: "MSBuild architecture to use"
+        required: false
+        type: string
+        default: x64
     secrets:
       token:
         required: true
@@ -53,6 +58,8 @@ jobs:
       - name: Instantiate Build Environment - Setup MSBuild
         id: setup_msbuild
         uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: ${{ inputs.MSBUILD_ARCHITECTURE }}
 
       - name: Instantiate Build Environment - Restore NuGet packages
         run: nuget restore ${{ env.SOLUTION_FILE_FULL_PATH }}
