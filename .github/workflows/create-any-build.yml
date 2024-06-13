@@ -1,0 +1,114 @@
+name: Create UHMI builds.
+on:
+  workflow_call:
+    inputs:
+      repository_name:
+        description: "Name of the REPOSITORY to be cloned"
+        required: true
+        type: string
+      branch_name:
+        description: "Name of the REPOSITORY BRANCH to be cloned"
+        required: false
+        type: string
+        default: main
+      solution_filename:
+        description: "Name of the SOLUTION FILE to build"
+        required: true
+        type: string
+    secrets:
+      token:
+        required: true
+
+
+env:
+  REPOSITORY_NAMESPACE: ra-standard  # This should never change
+
+
+jobs:
+  create-archive-build:
+    runs-on: windows-latest
+    steps:
+      # ********** Display Build Information **********
+      - name: Display Build Information
+        run: |
+          echo "Repository Name: ${{ inputs.repository_name }}"
+          echo "Branch Name: ${{ inputs.branch_name }}"
+          echo "Solution Filename: ${{ inputs.solution_filename }}"
+
+    
+      # ********** Instantiate the Build Environment **********
+      - name: Instantiate Build Environment - Clone the REMOTE "${{ inputs.repository_name }}" repo 
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPOSITORY_NAMESPACE }}/${{ inputs.repository_name }}
+          ref: ${{ inputs.branch_name }}
+          token: ${{ secrets.token }}
+
+      - name: Instantiate Build Environment - Find and store the full path to the SLN file
+        run: |
+          $solution_file = cmd.exe /c dir /s /b ${{ inputs.solution_filename }}
+          echo "SOLUTION_FILE_FULL_PATH=$solution_file" >> $env:GITHUB_ENV
+          echo $solution_file
+
+      - name: Instantiate Build Environment - Setup MSBuild
+        id: setup_msbuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Instantiate Build Environment - Restore NuGet packages
+        run: nuget restore ${{ env.SOLUTION_FILE_FULL_PATH }}
+
+      - name: Instantiate Build Environment - Update NuGet packages
+        run: nuget update ${{ env.SOLUTION_FILE_FULL_PATH }} -Prerelease
+
+
+      # ********** Create the RELEASE and DEBUG Builds **********
+      - name: Create RELEASE Build        
+        run: |
+          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Release
+          $exitCode = $LASTEXITCODE
+          echo "ErrorCode == $exitCode End of line"
+          if ( $exitCode -ne 0 )
+          {
+            echo "RELEASE build failed with exit code $exitCode"
+            exit $exitCode # Exit the workflow with the same error code
+          }
+          
+      - name: Create DEBUG Build        
+        run: |
+          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Debug
+          $exitCode = $LASTEXITCODE
+          if ( $exitCode -ne 0 )
+          {
+            echo "DEBUG build failed with exit code $exitCode"
+            exit $exitCode # Exit the workflow with the same error code
+          }
+
+
+      # ********** Find and store the full RELEASE & DEBUG build paths **********
+      - name: Find and store the full RELEASE build path
+        run: |
+          $rel_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\release\\.*\.exe$"
+          $rel_build_path = Split-Path $rel_build_path -Parent
+          echo "RELEASE_BUILD_PATH=$rel_build_path" >> $env:GITHUB_ENV
+          echo $rel_build_path
+
+      - name: Find and store the full DEBUG build path
+        run: |
+          $dbg_build_path = cmd.exe /c dir /s /b /a-d | findstr /i "\\bin\\debug\\.*\.exe$"
+          $dbg_build_path = Split-Path $dbg_build_path -Parent
+          echo "DEBUG_BUILD_PATH=$dbg_build_path" >> $env:GITHUB_ENV
+          echo $dbg_build_path
+
+
+      # ********** Archive the RELEASE & DEBUG Builds to GitHub **********
+      - name: Archive RELEASE Build Output to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.solution_filename }}_release-build-artifact
+          path: ${{ env.RELEASE_BUILD_PATH }}
+
+      - name: Archive DEBUG Build Output to GitHub
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.solution_filename }}_debug-build-artifact
+          path: ${{ env.DEBUG_BUILD_PATH }}
