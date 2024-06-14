@@ -20,6 +20,16 @@ on:
         required: false
         type: string
         default: x64
+      release_file_path:
+        description: "Path to the RELEASE build output"
+        required: false
+        type: string
+        default: ./bin/Release
+      debug_file_path:
+        description: "Path to the DEBUG build output"
+        required: false
+        type: string
+        default: ./bin/Debug
     secrets:
       token:
         required: true
@@ -71,7 +81,7 @@ jobs:
       # ********** Create the RELEASE and DEBUG Builds **********
       - name: Create RELEASE Build        
         run: |
-          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Release-1 /p:Platform="x64" /p:OutPutPath=./bin/Release
+          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Release-1 /p:Platform="${{ inputs.msbuild_architecture }}" /p:OutPutPath=${{ inputs.release_file_path }}
           $exitCode = $LASTEXITCODE
           echo "ErrorCode == $exitCode End of line"
           if ( $exitCode -ne 0 )
@@ -82,7 +92,7 @@ jobs:
           
       - name: Create DEBUG Build        
         run: |
-          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Debug-1 /p:Platform="x64" /p:OutPutPath=./bin/Debug
+          MSBuild.exe ${{ env.SOLUTION_FILE_FULL_PATH }} /t:Build /p:Configuration=Debug-1 /p:Platform="${{ inputs.msbuild_architecture }}" /p:OutPutPath=${{ inputs.debug_file_path }}
           $exitCode = $LASTEXITCODE
           if ( $exitCode -ne 0 )
           {
